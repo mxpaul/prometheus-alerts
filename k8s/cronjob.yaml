@@ -18,7 +18,7 @@ spec:
         spec:
           containers:
           - name: alerter
-            image: git.wildberries.ru:4567/innovation/wbx/query_alert:testing
+            image: docker.io/mxpaul/query_alert:v1.0.0 
             imagePullPolicy: IfNotPresent
             # command:
             # - /query_alert
