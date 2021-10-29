@@ -1,0 +1,49 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: shard-limit-alerter
+  labels:
+    app: shard-limit-alert
+spec:
+  schedule: "*/10 * * * *"
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  startingDeadlineSeconds: 550
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: shard-limit-alert
+        spec:
+          containers:
+          - name: alerter
+            image: git.wildberries.ru:4567/innovation/wbx/query_alert:testing
+            imagePullPolicy: IfNotPresent
+            # command:
+            # - /query_alert
+            args: [
+              "-prometheus-url", "http://prometheus:9090/",
+              "-query", "wbx_catalog_storage_limit-wbx_catalog_storage_size",
+              "-alert-threshold", "1000",
+              "-telegram-chat-id", "-12345",
+              "-telegram-bot-token-file", "/secret/telegram/secret_key",
+            ]
+            resources:
+              limits:
+                cpu: 0.1
+                memory: 100M
+              requests:
+                cpu: 0.1
+                memory: 100M
+            volumeMounts:
+            - mountPath: "/secret/telegram"
+              name: telegram-bot-tokens
+              readOnly: true
+          volumes:
+            - name: telegram-bot-tokens
+              secret:
+                secretName: telegram-bot-tokens
+          imagePullSecrets:
+          - name: gitlab-registry-secret
+          restartPolicy: Never
